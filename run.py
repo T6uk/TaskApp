@@ -26,8 +26,7 @@ def check_requirements():
     required_packages = [
         'streamlit',
         'pandas',
-        'plotly',
-        'uuid'
+        'plotly'
     ]
 
     missing_packages = []

@@ -14,196 +14,457 @@ from notifications import *
 
 # Page config
 st.set_page_config(
-    page_title="TickTick Clone - Enhanced",
+    page_title="TickTick Clone - Enhanced Pro",
     page_icon="✅",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for TickTick-like styling
+# Enhanced CSS for modern UI
 st.markdown("""
 <style>
+    /* Main theme variables */
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --error-color: #ef4444;
+        --info-color: #3b82f6;
+        --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --border-radius: 12px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Header styling */
     .main-header {
+        background: var(--background-gradient);
+        color: white;
+        padding: 20px;
+        border-radius: var(--border-radius);
+        margin-bottom: 24px;
+        text-align: center;
         font-size: 28px;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #3498db;
-        padding-bottom: 10px;
+        font-weight: 700;
+        box-shadow: var(--card-shadow);
     }
 
-    .task-item {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 12px;
-        margin: 8px 0;
+    /* Enhanced task cards */
+    .task-card {
         background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
+        border-radius: var(--border-radius);
+        padding: 16px;
+        margin: 12px 0;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        border-left: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
     }
 
-    .task-item:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    .task-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--background-gradient);
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-card:hover::before {
+        opacity: 1;
+    }
+
+    .task-card.completed {
+        background: #f8f9fa;
+        opacity: 0.8;
+    }
+
+    .task-card.priority-high { border-left-color: var(--error-color); }
+    .task-card.priority-medium { border-left-color: var(--warning-color); }
+    .task-card.priority-low { border-left-color: var(--info-color); }
+    .task-card.priority-none { border-left-color: #9ca3af; }
+
+    /* Habit tracker styling */
+    .habit-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 20px;
+        margin: 16px 0;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        border: 2px solid transparent;
+    }
+
+    .habit-card:hover {
+        border-color: var(--primary-color);
         transform: translateY(-1px);
     }
 
-    .task-completed {
-        background: #f8f9fa;
-        opacity: 0.7;
+    .habit-tracker-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 16px);
+        gap: 2px;
+        margin: 12px 0;
     }
 
-    .task-title-completed {
-        text-decoration: line-through;
-        color: #7f8c8d;
+    .habit-day {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        transition: var(--transition);
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
     }
 
-    .priority-high { border-left: 4px solid #e74c3c; }
-    .priority-medium { border-left: 4px solid #f39c12; }
-    .priority-low { border-left: 4px solid #3498db; }
-    .priority-none { border-left: 4px solid #95a5a6; }
+    .habit-day.completed { 
+        background: var(--success-color); 
+        border-color: var(--success-color);
+        transform: scale(1.1);
+    }
+    .habit-day.missed { background: var(--error-color); border-color: var(--error-color); }
+    .habit-day.pending { background: #f3f4f6; }
 
+    /* Sidebar enhancements */
     .sidebar-section {
-        margin: 15px 0;
-        padding: 12px;
-        border-radius: 8px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
+        background: white;
+        padding: 16px;
+        border-radius: var(--border-radius);
+        margin: 12px 0;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #e5e7eb;
     }
 
-    .notification-badge {
-        background: #e74c3c;
+    /* Metrics cards */
+    .metric-card {
+        background: var(--background-gradient);
         color: white;
-        border-radius: 50%;
-        padding: 2px 6px;
-        font-size: 12px;
-        font-weight: bold;
-        margin-left: 5px;
-    }
-
-    .achievement-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 15px;
-        border-radius: 10px;
-        margin: 10px 0;
-        text-align: center;
-    }
-
-    .focus-mode {
-        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
         padding: 20px;
-        border-radius: 12px;
-        margin: 15px 0;
+        border-radius: var(--border-radius);
+        text-align: center;
+        margin: 8px 0;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
     }
 
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Pomodoro timer */
     .pomodoro-timer {
-        text-align: center;
-        font-size: 48px;
-        font-weight: bold;
-        color: #e74c3c;
-        margin: 20px 0;
-        padding: 30px;
+        background: white;
+        border: 4px solid var(--primary-color);
         border-radius: 50%;
-        background: #f8f9fa;
-        border: 4px solid #e74c3c;
         width: 200px;
         height: 200px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 20px auto;
+        font-size: 32px;
+        font-weight: bold;
+        color: var(--primary-color);
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
     }
 
-    .habit-tracker {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 3px;
-        margin: 10px 0;
+    .pomodoro-timer.active {
+        animation: pulse 2s infinite;
+        border-color: var(--success-color);
+        color: var(--success-color);
     }
 
-    .habit-day {
-        width: 20px;
-        height: 20px;
-        border-radius: 3px;
-        display: inline-block;
-        border: 1px solid #ddd;
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
     }
 
-    .habit-completed { background: #27ae60; border-color: #27ae60; }
-    .habit-missed { background: #e74c3c; border-color: #e74c3c; }
-    .habit-pending { background: #ecf0f1; }
-
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Notification badges */
+    .notification-badge {
+        background: var(--error-color);
         color: white;
-        padding: 15px;
-        border-radius: 10px;
-        text-align: center;
-        margin: 5px 0;
+        border-radius: 50%;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 8px;
+        animation: bounce 1s infinite;
     }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+
+    /* Progress bars */
+    .progress-container {
+        background: #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 8px;
+        margin: 8px 0;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--background-gradient);
+        transition: width 0.5s ease;
+        border-radius: 10px;
+    }
+
+    /* Focus mode styling */
+    .focus-mode {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        padding: 24px;
+        border-radius: var(--border-radius);
+        margin: 20px 0;
+        color: white;
+        text-align: center;
+        box-shadow: var(--card-shadow);
+    }
+
+    /* Achievement notifications */
+    .achievement-card {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        color: white;
+        padding: 20px;
+        border-radius: var(--border-radius);
+        margin: 16px 0;
+        text-align: center;
+        box-shadow: var(--card-shadow);
+        animation: slideInUp 0.5s ease;
+    }
+
+    @keyframes slideInUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Calendar grid */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin: 16px 0;
+    }
+
+    .calendar-day {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px;
+        min-height: 80px;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .calendar-day:hover {
+        border-color: var(--primary-color);
+        transform: scale(1.02);
+    }
+
+    .calendar-day.today {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    /* Smart list styling */
+    .smart-list-item {
+        padding: 12px 16px;
+        margin: 4px 0;
+        border-radius: 8px;
+        transition: var(--transition);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .smart-list-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(4px);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .calendar-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pomodoro-timer {
+            width: 150px;
+            height: 150px;
+            font-size: 24px;
+        }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --background-color: #1a1a1a;
+            --text-color: #ffffff;
+        }
+    }
+
+    /* Glassmorphism effects for premium feel */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    /* Micro-interactions */
+    .interactive-button {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+    }
+
+    .interactive-button:hover {
+        transform: scale(1.05);
+    }
+
+    .interactive-button:active {
+        transform: scale(0.95);
+    }
+
+    /* Status indicators */
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    .status-pending { background: var(--warning-color); }
+    .status-in-progress { background: var(--info-color); }
+    .status-completed { background: var(--success-color); }
+    .status-cancelled { background: #6b7280; }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state and systems
+# Initialize enhanced systems
 init_session_state()
-init_notification_system()
+init_smart_notification_system()
+
+# Initialize smart data manager
+if 'smart_data_manager' not in st.session_state:
+    st.session_state.smart_data_manager = create_smart_data_manager("file", auto_backup=True)
 
 # Load saved data on startup
 if 'data_loaded' not in st.session_state:
     load_saved_data()
     st.session_state.data_loaded = True
 
-# Auto-save data
+# Auto-save with enhanced error handling
 if 'last_auto_save' not in st.session_state:
     st.session_state.last_auto_save = datetime.now()
 
-# Check if it's time to auto-save
+# Check if it's time to auto-save (every 30 seconds)
 if (datetime.now() - st.session_state.last_auto_save).seconds > 30:
     auto_save_data()
 
-# Sidebar navigation
+# Enhanced sidebar with modern design
 with st.sidebar:
-    st.markdown("### 📋 TickTick Clone Enhanced")
+    # App header with gradient
+    st.markdown("""
+    <div class="main-header">
+        ✅ TickTick Pro
+        <div style="font-size: 14px; font-weight: 400; margin-top: 8px;">
+            Enhanced Productivity Suite
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Notification badge
-    notification_count = get_notification_badge_count()
-    if notification_count > 0:
-        st.markdown(f"🔔 Notifications <span class='notification-badge'>{notification_count}</span>",
-                    unsafe_allow_html=True)
-
-    # Quick stats
+    # Quick stats with modern cards
     stats = get_task_stats()
     habit_stats = get_habit_stats()
 
+    # Modern metrics display
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("📋 Pending", stats['pending'])
-        st.metric("⚠️ Overdue", stats['overdue'])
-    with col2:
-        st.metric("✅ Completed", stats['completed'])
-        st.metric("🔥 Habits", f"{habit_stats['completed_today']}/{habit_stats['total']}")
+        st.markdown(f"""
+        <div class="metric-card">
+            <div style="font-size: 24px; font-weight: bold;">{stats['pending']}</div>
+            <div style="font-size: 12px; opacity: 0.9;">Pending</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Progress bar
+        st.markdown(f"""
+        <div class="metric-card">
+            <div style="font-size: 24px; font-weight: bold;">{stats['overdue']}</div>
+            <div style="font-size: 12px; opacity: 0.9;">Overdue</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div style="font-size: 24px; font-weight: bold;">{stats['completed']}</div>
+            <div style="font-size: 12px; opacity: 0.9;">Completed</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div class="metric-card">
+            <div style="font-size: 24px; font-weight: bold;">{habit_stats['completed_today']}/{habit_stats['total']}</div>
+            <div style="font-size: 12px; opacity: 0.9;">Habits</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Enhanced progress visualization
     if stats['total'] > 0:
         progress = stats['completed'] / stats['total']
-        st.progress(progress)
-        st.write(f"**{progress:.1%}** completion rate")
+        st.markdown(f"""
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {progress * 100}%"></div>
+        </div>
+        <div style="text-align: center; font-size: 14px; color: #6b7280; margin-top: 4px;">
+            {progress:.1%} completion rate
+        </div>
+        """, unsafe_allow_html=True)
 
     st.divider()
 
-    # Search box
-    search_query = st.text_input("🔍 Search tasks", placeholder="Search...")
+    # Smart search with advanced features
+    search_query = st.text_input("🔍 Smart Search", placeholder="Search tasks, #tags, priority:high...")
+
+    # Quick filters
+    if st.checkbox("🎯 Smart Filters", value=False):
+        quick_filters = st.multiselect(
+            "Quick apply",
+            ["High Priority", "Due Today", "Overdue", "No Due Date", "Work", "Personal"],
+            default=[]
+        )
 
     st.divider()
 
-    # Navigation with notification badges
+    # Enhanced navigation with notification badges
+    notification_count = get_notification_badge_count()
+
     nav_options = {
         "📝 Tasks": "tasks",
         "📅 Calendar": "calendar",
         "🎯 Habits": "habits",
         "🍅 Pomodoro": "pomodoro",
-        "📊 Statistics": "statistics",
-        "🧠 Advanced": "advanced",
+        "📊 Analytics": "analytics",
+        "🧠 Smart Features": "smart",
         "🔔 Notifications": "notifications",
         "⚙️ Settings": "settings"
     }
@@ -218,10 +479,11 @@ with st.sidebar:
                      key=f"nav_{view}",
                      type="primary" if st.session_state.current_view == view else "secondary"):
             st.session_state.current_view = view
+            st.rerun()
 
     st.divider()
 
-    # Smart Lists
+    # Enhanced Smart Lists with modern styling
     st.markdown("### 🧠 Smart Lists")
     smart_filters = {
         "📋 All Tasks": "all",
@@ -230,113 +492,204 @@ with st.sidebar:
         "📋 This Week": "this_week",
         "⚠️ Overdue": "overdue",
         "⭐ High Priority": "high_priority",
+        "🔄 In Progress": "in_progress",
         "✅ Completed": "completed"
     }
 
     for label, filter_type in smart_filters.items():
         task_count = len(get_tasks_by_filter(filter_type))
-        if st.button(f"{label} ({task_count})", use_container_width=True, key=f"filter_{filter_type}"):
+
+        # Modern list item with hover effects
+        if st.button(f"{label} ({task_count})",
+                     use_container_width=True,
+                     key=f"filter_{filter_type}",
+                     help=f"Show {label.lower()}"):
             st.session_state.current_filter = filter_type
             st.session_state.current_view = "tasks"
+            st.rerun()
 
-    # Custom Lists
+    # Custom Lists with enhanced UI
     st.markdown("### 📁 My Lists")
     for list_name in st.session_state.lists:
         list_tasks = [t for t in st.session_state.tasks if t['list_name'] == list_name]
-        task_count = len(list_tasks)
+        total_count = len(list_tasks)
         pending_count = len([t for t in list_tasks if t['status'] == TaskStatus.PENDING.value])
+        completed_count = len([t for t in list_tasks if t['status'] == TaskStatus.COMPLETED.value])
 
-        if st.button(f"📋 {list_name} ({pending_count}/{task_count})",
-                     use_container_width=True, key=f"list_{list_name}"):
+        if st.button(f"📋 {list_name} ({pending_count}/{total_count})",
+                     use_container_width=True,
+                     key=f"list_{list_name}",
+                     help=f"{completed_count} completed, {pending_count} pending"):
             st.session_state.current_filter = list_name
             st.session_state.current_view = "tasks"
+            st.rerun()
 
-    # Quick add list
-    with st.expander("➕ Add List"):
-        new_list = st.text_input("List name", key="new_list_name")
-        if st.button("Add", key="add_list_btn"):
-            if new_list and new_list not in st.session_state.lists:
-                st.session_state.lists.append(new_list)
-                st.success(f"Added list: {new_list}")
-                auto_save_data()
+    # Quick add list with modern design
+    with st.expander("➕ Manage Lists"):
+        new_list = st.text_input("New list name", key="new_list_name")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Add", key="add_list_btn", use_container_width=True):
+                if new_list and new_list not in st.session_state.lists:
+                    st.session_state.lists.append(new_list)
+                    st.success(f"Added: {new_list}")
+                    auto_save_data()
+                    st.rerun()
+
+        with col2:
+            # List management
+            if st.button("Manage", key="manage_lists_btn", use_container_width=True):
+                st.session_state.current_view = "settings"
                 st.rerun()
 
-# Main content area
-if st.session_state.current_view == "tasks":
-    st.markdown('<h1 class="main-header">📝 Tasks</h1>', unsafe_allow_html=True)
+    # Daily insights
+    st.markdown("### 💡 Today's Insights")
+    insights = generate_smart_insights(st.session_state.tasks, st.session_state.habits)
 
-    # Quick action tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 List View", "🎯 Focus Mode", "⚡ Bulk Operations", "📋 Templates"])
+    if insights:
+        for insight in insights[:3]:  # Show top 3 insights
+            st.info(insight)
+    else:
+        st.success("🎉 All good! No urgent insights today.")
+
+# Main content area with enhanced views
+if st.session_state.current_view == "tasks":
+    st.markdown('<div class="main-header">📝 Task Management</div>', unsafe_allow_html=True)
+
+    # Enhanced task view with multiple tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["📋 List View", "🎯 Focus Mode", "⚡ Bulk Actions", "📋 Templates", "🔍 Advanced Search"])
 
     with tab1:
-        # Quick add task
-        with st.container():
-            st.markdown("### ➕ Quick Add Task")
+        render_enhanced_task_list_view(search_query)
 
-            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-            with col1:
-                new_task_title = st.text_input("", placeholder="What do you want to do?", key="quick_task_input")
-            with col2:
-                quick_due = st.date_input("Due date", value=None, key="quick_due")
-            with col3:
-                quick_priority = st.selectbox("Priority",
-                                              options=[p.value for p in Priority],
-                                              format_func=lambda x: x.title(),
-                                              key="quick_priority")
-            with col4:
-                quick_list = st.selectbox("List", st.session_state.lists, key="quick_list")
+    with tab2:
+        render_focus_mode()
 
-            if st.button("Add Task", type="primary", use_container_width=True):
-                if new_task_title:
-                    errors = validate_task_data(new_task_title, quick_due)
-                    if errors:
-                        for error in errors:
-                            st.error(error)
-                    else:
-                        add_task(new_task_title, due_date=quick_due,
-                                 priority=Priority(quick_priority), list_name=quick_list)
-                        st.success("Task added!")
+    with tab3:
+        render_bulk_operations()
+
+    with tab4:
+        render_task_templates()
+
+    with tab5:
+        render_advanced_search_interface()
+
+elif st.session_state.current_view == "calendar":
+    st.markdown('<div class="main-header">📅 Calendar & Planning</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3, tab4 = st.tabs(["📅 Month View", "📋 Week Planner", "📊 Timeline", "⏰ Time Blocking"])
+
+    with tab1:
+        render_enhanced_calendar_view()
+
+    with tab2:
+        render_weekly_planner()
+
+    with tab3:
+        render_gantt_chart()
+
+    with tab4:
+        render_time_blocking_interface()
+
+elif st.session_state.current_view == "habits":
+    st.markdown('<div class="main-header">🎯 Habit Tracking</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["🎯 My Habits", "📊 Analytics", "🏆 Achievements"])
+
+    with tab1:
+        render_enhanced_habits_view()
+
+    with tab2:
+        render_habit_insights()
+
+    with tab3:
+        render_habit_achievements()
+
+elif st.session_state.current_view == "pomodoro":
+    st.markdown('<div class="main-header">🍅 Focus Sessions</div>', unsafe_allow_html=True)
+    render_enhanced_pomodoro_timer()
+
+elif st.session_state.current_view == "analytics":
+    st.markdown('<div class="main-header">📊 Productivity Analytics</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["📊 Overview", "🧠 Advanced Analytics", "🎯 Goal Tracking"])
+
+    with tab1:
+        render_productivity_overview()
+
+    with tab2:
+        render_comprehensive_analytics()
+
+    with tab3:
+        render_goal_tracking_interface()
+
+elif st.session_state.current_view == "smart":
+    st.markdown('<div class="main-header">🧠 Smart Features</div>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["📋 Eisenhower Matrix", "🚀 Smart Scheduling", "🔮 AI Insights"])
+
+    with tab1:
+        render_advanced_eisenhower_matrix()
+
+    with tab2:
+        render_smart_scheduling()
+
+    with tab3:
+        render_ai_insights_dashboard()
+
+elif st.session_state.current_view == "notifications":
+    render_enhanced_notification_center()
+
+elif st.session_state.current_view == "settings":
+    st.markdown('<div class="main-header">⚙️ Settings & Preferences</div>', unsafe_allow_html=True)
+    render_enhanced_settings()
+
+
+# Helper functions for enhanced views
+def render_enhanced_task_list_view(search_query: str):
+    """Enhanced task list view with modern UI"""
+
+    # Quick add task with enhanced UI
+    with st.container():
+        st.markdown("### ➕ Quick Add Task")
+
+        col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
+        with col1:
+            new_task_title = st.text_input("", placeholder="What do you want to accomplish?", key="quick_task_input")
+        with col2:
+            quick_due = st.date_input("Due date", value=None, key="quick_due")
+        with col3:
+            quick_priority = st.selectbox("Priority",
+                                          options=[p.value for p in Priority],
+                                          format_func=lambda x: x.title(),
+                                          key="quick_priority")
+        with col4:
+            quick_list = st.selectbox("List", st.session_state.lists, key="quick_list")
+
+        if st.button("✨ Add Task", type="primary", use_container_width=True):
+            if new_task_title:
+                errors = validate_task_data(new_task_title, quick_due)
+                if errors:
+                    for error in errors:
+                        st.error(error)
+                else:
+                    task_id = add_task(new_task_title, due_date=quick_due,
+                                       priority=Priority(quick_priority), list_name=quick_list)
+                    if task_id:
+                        st.success("Task added successfully! ✨")
+                        create_task_completion_celebration("Task Created", {"task_id": task_id})
                         auto_save_data()
                         st.rerun()
 
-        # Advanced task creation
-        with st.expander("🔧 Advanced Task Creation"):
-            col1, col2 = st.columns(2)
+    # Advanced filters with modern UI
+    with st.expander("🔧 Advanced Filters & Sorting", expanded=False):
+        col1, col2, col3, col4, col5 = st.columns(5)
 
-            with col1:
-                adv_title = st.text_input("Title", key="adv_title")
-                adv_description = st.text_area("Description", key="adv_desc")
-                adv_due_date = st.date_input("Due date", value=None, key="adv_due")
-
-            with col2:
-                adv_priority = st.selectbox("Priority",
-                                            options=[p.value for p in Priority],
-                                            format_func=lambda x: x.title(),
-                                            key="adv_priority")
-                adv_list = st.selectbox("List", st.session_state.lists, key="adv_list")
-                adv_tags = st.text_input("Tags (comma separated)", key="adv_tags")
-                adv_subtasks = st.text_area("Subtasks (one per line)", key="adv_subtasks")
-
-            if st.button("Create Advanced Task", type="primary"):
-                if adv_title:
-                    errors = validate_task_data(adv_title, adv_due_date)
-                    if errors:
-                        for error in errors:
-                            st.error(error)
-                    else:
-                        tags = [tag.strip() for tag in adv_tags.split(",")] if adv_tags else []
-                        subtasks = [s.strip() for s in adv_subtasks.split("\n")] if adv_subtasks else []
-                        add_task(adv_title, adv_description, adv_due_date,
-                                 Priority(adv_priority), adv_list, tags, subtasks)
-                        st.success("Advanced task created!")
-                        auto_save_data()
-                        st.rerun()
-
-        # Task filters and sorting
-        col1, col2, col3, col4 = st.columns(4)
         with col1:
             filter_status = st.selectbox("Status",
-                                         ["All", "Pending", "Completed"],
+                                         ["All", "Pending", "In Progress", "Completed", "Cancelled"],
                                          key="filter_status")
         with col2:
             filter_list = st.selectbox("List",
@@ -348,340 +701,391 @@ if st.session_state.current_view == "tasks":
                                            key="filter_priority")
         with col4:
             sort_by = st.selectbox("Sort by",
-                                   ["Due Date", "Priority", "Created", "Title"],
+                                   ["Due Date", "Priority", "Created", "Updated", "Title", "Completion %"],
                                    key="sort_by")
+        with col5:
+            sort_reverse = st.checkbox("Reverse order", key="sort_reverse")
 
-        # Get and filter tasks
-        if search_query:
-            tasks = search_tasks(search_query)
-        else:
-            tasks = get_tasks_by_filter(getattr(st.session_state, 'current_filter', 'all'))
+    # Get and filter tasks with enhanced logic
+    if search_query:
+        tasks = search_tasks_advanced(search_query)
+    else:
+        tasks = get_tasks_by_filter(getattr(st.session_state, 'current_filter', 'all'))
 
-        # Apply additional filters
-        if filter_status != "All":
-            status_val = TaskStatus.PENDING.value if filter_status == "Pending" else TaskStatus.COMPLETED.value
-            tasks = [t for t in tasks if t['status'] == status_val]
+    # Apply additional filters
+    if filter_status != "All":
+        status_map = {
+            "Pending": TaskStatus.PENDING.value,
+            "In Progress": TaskStatus.IN_PROGRESS.value,
+            "Completed": TaskStatus.COMPLETED.value,
+            "Cancelled": TaskStatus.CANCELLED.value
+        }
+        tasks = [t for t in tasks if t['status'] == status_map[filter_status]]
 
-        if filter_list != "All":
-            tasks = [t for t in tasks if t['list_name'] == filter_list]
+    if filter_list != "All":
+        tasks = [t for t in tasks if t['list_name'] == filter_list]
 
-        if filter_priority != "All":
-            tasks = [t for t in tasks if t['priority'] == filter_priority.lower()]
+    if filter_priority != "All":
+        tasks = [t for t in tasks if t['priority'] == filter_priority.lower()]
 
-        # Sort tasks
-        if sort_by == "Due Date":
-            tasks.sort(key=lambda x: (x['due_date'] is None, x['due_date'] or '9999-12-31'))
-        elif sort_by == "Priority":
-            priority_order = {p.value: i for i, p in enumerate(Priority)}
-            tasks.sort(key=lambda x: priority_order.get(x['priority'], 999))
-        elif sort_by == "Created":
-            tasks.sort(key=lambda x: x['created_at'], reverse=True)
-        elif sort_by == "Title":
-            tasks.sort(key=lambda x: x['title'].lower())
+    # Enhanced sorting
+    tasks = sort_tasks(tasks, sort_by.lower().replace(" ", "_"), sort_reverse)
 
-        # Display tasks
-        st.markdown(f"### Found {len(tasks)} tasks")
+    # Display enhanced task list
+    st.markdown(f"### 📋 Found {len(tasks)} tasks")
 
-        if not tasks:
-            st.info("No tasks found. Create your first task above!")
-        else:
-            for task in tasks:
-                priority_class = f"priority-{task['priority']}"
-                status_class = "task-completed" if task['status'] == TaskStatus.COMPLETED.value else ""
-                title_class = "task-title-completed" if task['status'] == TaskStatus.COMPLETED.value else ""
+    if not tasks:
+        st.markdown("""
+        <div style="text-align: center; padding: 40px; color: #6b7280;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+            <div style="font-size: 18px; margin-bottom: 8px;">No tasks found</div>
+            <div style="font-size: 14px;">Create your first task above to get started!</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        for task in tasks:
+            render_enhanced_task_card(task)
 
-                with st.container():
-                    col1, col2, col3, col4 = st.columns([0.5, 4, 1, 1])
 
-                    with col1:
-                        if task['status'] == TaskStatus.PENDING.value:
-                            if st.checkbox("", key=f"complete_{task['id']}"):
-                                complete_task(task['id'])
-                                st.success("Task completed!")
-                                auto_save_data()
-                                st.rerun()
-                        else:
-                            if st.checkbox("", value=True, key=f"uncomplete_{task['id']}"):
-                                pass
-                            else:
-                                uncomplete_task(task['id'])
-                                st.success("Task marked as pending!")
-                                auto_save_data()
-                                st.rerun()
+def render_enhanced_task_card(task: Dict):
+    """Render enhanced task card with modern design"""
 
-                    with col2:
-                        # Build task display
-                        tags_html = ""
-                        if task.get('tags') and isinstance(task['tags'], list):
-                            tags_html = "<br>" + " ".join(
-                                [
-                                    f'<span style="background:#667eea;color:white;padding:2px 6px;border-radius:8px;font-size:10px;">{tag}</span>'
-                                    for tag in task['tags']])
+    # Determine card styling
+    priority_class = f"priority-{task['priority']}"
+    status_class = "completed" if task['status'] == TaskStatus.COMPLETED.value else ""
 
-                        # Format due date
-                        due_date_display = format_date_display(task['due_date'])
+    # Build progress indicator for subtasks
+    progress_html = ""
+    if task.get('subtasks'):
+        completed_subtasks = sum(1 for st in task['subtasks']
+                                 if isinstance(st, dict) and st.get('completed', False))
+        total_subtasks = len(task['subtasks'])
+        progress_pct = (completed_subtasks / total_subtasks) * 100 if total_subtasks > 0 else 0
 
-                        # Subtasks count
-                        subtask_info = ""
-                        if task.get('subtasks') and isinstance(task['subtasks'], list):
-                            subtask_info = f" | 📝 {len(task['subtasks'])} subtasks"
+        progress_html = f"""
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {progress_pct}%"></div>
+        </div>
+        <small style="color: #6b7280;">{completed_subtasks}/{total_subtasks} subtasks completed</small>
+        """
 
-                        st.markdown(f"""
-                        <div class="task-item {priority_class} {status_class}">
-                            <strong class="{title_class}">{task['title']}</strong><br>
-                            <small style="color: #6c757d;">{task.get('description', '')}</small><br>
-                            <small style="color: #6c757d;">📋 {task['list_name']} | 📅 {due_date_display} | 
-                            🎯 {task['priority'].title()}{subtask_info}</small>
-                            {tags_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+    # Build tags display
+    tags_html = ""
+    if task.get('tags') and isinstance(task['tags'], list):
+        tags_html = "<div style='margin-top: 8px;'>" + "".join([
+            f'<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; '
+            f'padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-right: 4px;">{tag}</span>'
+            for tag in task['tags']
+        ]) + "</div>"
 
-                    with col3:
-                        if st.button("✏️", key=f"edit_{task['id']}", help="Edit task"):
-                            # Simple edit functionality
-                            with st.form(key=f"edit_form_{task['id']}"):
-                                new_title = st.text_input("Title", value=task['title'])
-                                new_desc = st.text_area("Description", value=task.get('description', ''))
-                                if st.form_submit_button("Update"):
-                                    if new_title:
-                                        task['title'] = new_title
-                                        task['description'] = new_desc
-                                        st.success("Task updated!")
-                                        auto_save_data()
-                                        st.rerun()
+    # Time display
+    due_date_display = format_date_display(task['due_date'])
 
-                    with col4:
-                        if st.button("🗑️", key=f"delete_{task['id']}", help="Delete task"):
-                            delete_task(task['id'])
-                            st.success("Task deleted!")
-                            auto_save_data()
-                            st.rerun()
+    # Estimated vs actual time
+    time_info = ""
+    if task.get('estimated_time'):
+        est_hours = task['estimated_time'] / 60
+        time_info = f"⏱️ Est: {est_hours:.1f}h"
 
-    with tab2:
-        render_focus_mode()
+        if task.get('actual_time'):
+            act_hours = task['actual_time'] / 60
+            time_info += f" | Act: {act_hours:.1f}h"
 
-    with tab3:
-        render_bulk_operations()
+    with st.container():
+        col1, col2, col3, col4 = st.columns([0.5, 6, 1.5, 1])
 
-    with tab4:
-        render_task_templates()
-
-elif st.session_state.current_view == "calendar":
-    st.markdown('<h1 class="main-header">📅 Calendar</h1>', unsafe_allow_html=True)
-
-    # Calendar view tabs
-    tab1, tab2, tab3 = st.tabs(["📅 Month View", "📋 Week Planner", "📊 Timeline"])
-
-    with tab1:
-        # Monthly calendar view
-        col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
-            view_type = st.selectbox("View", ["Month", "Week", "Day"])
-        with col2:
-            current_date = st.date_input("Navigate to", value=date.today())
-        with col3:
-            st.metric("Tasks Today", len(get_tasks_by_filter("today")))
-
-        if view_type == "Month":
-            # Monthly calendar implementation
-            import calendar
-
-            month_start = current_date.replace(day=1)
-
-            # Get tasks for the month
-            month_tasks = {}
-            for task in st.session_state.tasks:
-                if task['due_date']:
-                    try:
-                        task_date = datetime.fromisoformat(task['due_date']).date()
-                        if task_date.month == current_date.month and task_date.year == current_date.year:
-                            date_str = task_date.isoformat()
-                            if date_str not in month_tasks:
-                                month_tasks[date_str] = []
-                            month_tasks[date_str].append(task)
-                    except:
-                        continue
-
-            # Create calendar grid
-            cal = calendar.monthcalendar(current_date.year, current_date.month)
-
-            st.markdown(f"### {calendar.month_name[current_date.month]} {current_date.year}")
-
-            # Days of week header
-            days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            cols = st.columns(7)
-            for i, day in enumerate(days):
-                cols[i].markdown(f"**{day}**")
-
-            # Calendar days
-            for week in cal:
-                cols = st.columns(7)
-                for i, day in enumerate(week):
-                    if day == 0:
-                        cols[i].write("")
-                    else:
-                        day_date = date(current_date.year, current_date.month, day)
-                        date_str = day_date.isoformat()
-                        is_today = day_date == date.today()
-
-                        with cols[i]:
-                            # Day number with today highlighting
-                            if is_today:
-                                st.markdown(f"**🔸 {day}**")
-                            else:
-                                st.markdown(f"**{day}**")
-
-                            # Show tasks for this day
-                            if date_str in month_tasks:
-                                tasks_today = month_tasks[date_str]
-                                for idx, task in enumerate(tasks_today[:3]):  # Show max 3 tasks
-                                    status_icon = "✅" if task['status'] == TaskStatus.COMPLETED.value else "⭕"
-                                    priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🔵", "none": "⚪"}.get(
-                                        task['priority'], "⚪")
-                                    st.markdown(f"{status_icon}{priority_emoji} {task['title'][:12]}...")
-
-                                if len(tasks_today) > 3:
-                                    st.markdown(f"<small>...+{len(tasks_today) - 3} more</small>",
-                                                unsafe_allow_html=True)
-
-    with tab2:
-        render_weekly_planner()
-
-    with tab3:
-        render_gantt_chart()
-
-elif st.session_state.current_view == "habits":
-    st.markdown('<h1 class="main-header">🎯 Habits</h1>', unsafe_allow_html=True)
-
-    # Habit tabs
-    tab1, tab2 = st.tabs(["🎯 My Habits", "📊 Habit Analytics"])
-
-    with tab1:
-        # Habit stats overview
-        habit_stats = get_habit_stats()
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Habits", habit_stats['total'])
-        col2.metric("Completed Today", habit_stats['completed_today'])
-        col3.metric("Completion Rate", f"{habit_stats['completion_rate']:.1f}%")
-        col4.metric("Avg Streak", f"{habit_stats['average_streak']:.1f}")
-
-        # Add new habit
-        with st.expander("➕ Add New Habit", expanded=False):
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                habit_name = st.text_input("Habit name", placeholder="e.g., Drink 8 glasses of water")
-            with col2:
-                habit_frequency = st.selectbox("Frequency", ["daily", "weekly", "monthly"])
-            with col3:
-                habit_target = st.number_input("Target", min_value=1, value=1)
-            with col4:
-                reminder_time = st.time_input("Reminder time", value=None)
-
-            if st.button("Add Habit", type="primary"):
-                if habit_name:
-                    reminder_str = reminder_time.strftime('%H:%M') if reminder_time else None
-                    add_habit(habit_name, habit_frequency, habit_target, reminder_str)
-                    st.success("Habit added!")
+            # Enhanced checkbox with status handling
+            if task['status'] == TaskStatus.COMPLETED.value:
+                checked = st.checkbox("", value=True, key=f"task_check_{task['id']}")
+                if not checked:
+                    uncomplete_task(task['id'])
+                    st.success("Task marked as pending!")
+                    auto_save_data()
+                    st.rerun()
+            else:
+                checked = st.checkbox("", value=False, key=f"task_check_{task['id']}")
+                if checked:
+                    complete_task(task['id'])
+                    create_task_completion_celebration(task['title'], {"task_id": task['id']})
+                    st.balloons()
                     auto_save_data()
                     st.rerun()
 
-        # Display habits
-        if not st.session_state.habits:
-            st.info("No habits yet. Create your first habit above!")
+        with col2:
+            # Enhanced task display
+            title_style = "text-decoration: line-through; opacity: 0.7;" if task[
+                                                                                'status'] == TaskStatus.COMPLETED.value else ""
+
+            st.markdown(f"""
+            <div class="task-card {priority_class} {status_class}">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <span class="status-indicator status-{task['status'].replace('_', '-')}"></span>
+                    <h4 style="margin: 0; {title_style}">{task['title']}</h4>
+                </div>
+
+                {f'<p style="color: #6b7280; margin: 8px 0; {title_style}">{task["description"]}</p>' if task.get('description') else ''}
+
+                <div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280;">
+                    <span>📋 {task['list_name']}</span>
+                    <span>📅 {due_date_display}</span>
+                    <span>🎯 {task['priority'].title()}</span>
+                    {f'<span>{time_info}</span>' if time_info else ''}
+                </div>
+
+                {progress_html}
+                {tags_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col3:
+            # Action buttons with modern styling
+            col_a, col_b, col_c = st.columns(3)
+
+            with col_a:
+                if st.button("✏️", key=f"edit_{task['id']}", help="Edit task"):
+                    st.session_state.editing_task_id = task['id']
+                    st.rerun()
+
+            with col_b:
+                if st.button("📊", key=f"details_{task['id']}", help="View details"):
+                    render_task_details_modal(task)
+
+            with col_c:
+                if st.button("🗑️", key=f"delete_{task['id']}", help="Delete task"):
+                    if delete_task(task['id']):
+                        st.success("Task deleted!")
+                        auto_save_data()
+                        st.rerun()
+
+        with col4:
+            # Priority indicator and quick actions
+            priority_colors = {"high": "🔴", "medium": "🟡", "low": "🔵", "none": "⚪"}
+            st.markdown(f"**{priority_colors.get(task['priority'], '⚪')}**")
+
+            if task['status'] == TaskStatus.PENDING.value:
+                if st.button("🍅", key=f"pomodoro_{task['id']}", help="Start focus session"):
+                    start_pomodoro_for_task(task)
+
+
+def render_enhanced_calendar_view():
+    """Enhanced calendar view with modern design"""
+
+    # Calendar controls
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        view_type = st.selectbox("View", ["Month", "Week", "Day"])
+    with col2:
+        current_date = st.date_input("Navigate to", value=date.today())
+    with col3:
+        show_completed = st.checkbox("Show completed", value=False)
+    with col4:
+        color_by = st.selectbox("Color by", ["Priority", "List", "Status"])
+
+    if view_type == "Month":
+        render_monthly_calendar_grid(current_date, show_completed, color_by)
+    elif view_type == "Week":
+        render_weekly_calendar_view(current_date, show_completed, color_by)
+    else:
+        render_daily_calendar_view(current_date, show_completed, color_by)
+
+
+def render_enhanced_habits_view():
+    """Enhanced habits view with modern design"""
+
+    # Habit overview metrics
+    habit_stats = get_habit_stats()
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Habits", habit_stats['total'])
+    col2.metric("Completed Today", habit_stats['completed_today'])
+    col3.metric("Completion Rate", f"{habit_stats['completion_rate']:.1f}%")
+    col4.metric("Active Habits", habit_stats['active_habits'])
+
+    # Add new habit with enhanced UI
+    with st.expander("➕ Add New Habit", expanded=False):
+        col1, col2, col3, col4, col5 = st.columns(5)
+
+        with col1:
+            habit_name = st.text_input("Habit name", placeholder="e.g., Drink 8 glasses of water")
+        with col2:
+            habit_frequency = st.selectbox("Frequency", ["daily", "weekly", "monthly"])
+        with col3:
+            habit_target = st.number_input("Target", min_value=1, value=1)
+        with col4:
+            reminder_time = st.time_input("Reminder", value=None)
+        with col5:
+            habit_category = st.selectbox("Category",
+                                          ["Health", "Fitness", "Learning", "Work", "Personal", "Social"])
+
+        if st.button("✨ Create Habit", type="primary", use_container_width=True):
+            if habit_name:
+                reminder_str = reminder_time.strftime('%H:%M') if reminder_time else None
+                habit_id = add_habit(habit_name, habit_frequency, habit_target, reminder_str, habit_category)
+                if habit_id:
+                    st.success("Habit created successfully! ✨")
+                    auto_save_data()
+                    st.rerun()
+
+    # Display habits with enhanced cards
+    if not st.session_state.habits:
+        st.markdown("""
+        <div style="text-align: center; padding: 40px; color: #6b7280;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+            <div style="font-size: 18px; margin-bottom: 8px;">No habits yet</div>
+            <div style="font-size: 14px;">Create your first habit above to start building positive routines!</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        for habit in st.session_state.habits:
+            render_enhanced_habit_card(habit)
+
+
+def render_enhanced_habit_card(habit: Dict):
+    """Render enhanced habit card with modern design"""
+
+    today = date.today().isoformat()
+    completion_dates = habit.get('completion_dates', [])
+    if isinstance(completion_dates, str):
+        try:
+            completion_dates = json.loads(completion_dates)
+        except:
+            completion_dates = []
+
+    completed_today = today in completion_dates
+    current_streak = habit.get('streak', 0)
+    best_streak = habit.get('best_streak', 0)
+
+    with st.container():
+        st.markdown(f"""
+        <div class="habit-card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <div>
+                    <h3 style="margin: 0; color: #1f2937;">{habit['name']}</h3>
+                    <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">
+                        📅 {habit['frequency'].title()} • 🎯 Target: {habit['target']} 
+                        {f"• ⏰ {habit['reminder_time']}" if habit.get('reminder_time') else ""}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 24px; font-weight: bold; color: #667eea;">{current_streak}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Current Streak</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+
+        with col1:
+            # Habit tracker visualization (last 30 days)
+            render_habit_tracker_grid(completion_dates)
+
+        with col2:
+            # Today's status and action
+            if completed_today:
+                st.success("✅ Completed today!")
+                if st.button("↩️ Undo", key=f"undo_habit_{habit['id']}"):
+                    uncomplete_habit(habit['id'])
+                    auto_save_data()
+                    st.rerun()
+            else:
+                if st.button("✨ Mark Complete", key=f"habit_{habit['id']}", type="primary", use_container_width=True):
+                    complete_habit(habit['id'])
+                    st.balloons()
+                    st.success("Great job! 🎉")
+                    auto_save_data()
+                    st.rerun()
+
+        with col3:
+            # Streak information with enhanced display
+            st.metric("Best Streak", f"{best_streak} days",
+                      delta=f"+{current_streak - best_streak}" if current_streak > best_streak else None)
+
+            # Calculate completion rate for last 30 days
+            thirty_days_ago = date.today() - timedelta(days=30)
+            recent_completions = [d for d in completion_dates
+                                  if datetime.fromisoformat(d).date() >= thirty_days_ago]
+            completion_rate = len(recent_completions) / 30 * 100
+
+            st.metric("30-Day Rate", f"{completion_rate:.0f}%")
+
+        with col4:
+            # Habit actions
+            if st.button("🗑️", key=f"delete_habit_{habit['id']}", help="Delete habit"):
+                if delete_habit(habit['id']):
+                    st.success("Habit deleted!")
+                    auto_save_data()
+                    st.rerun()
+
+
+def render_habit_tracker_grid(completion_dates: List[str]):
+    """Render habit tracker grid for last 30 days"""
+
+    # Generate last 30 days
+    grid_html = '<div class="habit-tracker-grid">'
+
+    for i in range(29, -1, -1):  # Last 30 days
+        check_date = date.today() - timedelta(days=i)
+        date_str = check_date.isoformat()
+
+        if date_str in completion_dates:
+            css_class = "completed"
+            title = f"Completed on {check_date.strftime('%m/%d')}"
+        elif check_date < date.today():
+            css_class = "missed"
+            title = f"Missed on {check_date.strftime('%m/%d')}"
         else:
-            for habit in st.session_state.habits:
-                with st.container():
-                    col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+            css_class = "pending"
+            title = f"Today ({check_date.strftime('%m/%d')})"
 
-                    with col1:
-                        st.markdown(f"**{habit['name']}**")
-                        st.markdown(f"📅 {habit['frequency'].title()} | 🎯 Target: {habit['target']}")
+        grid_html += f'<div class="habit-day {css_class}" title="{title}"></div>'
 
-                        if habit.get('reminder_time'):
-                            st.markdown(f"⏰ Reminder: {habit['reminder_time']}")
+    grid_html += '</div>'
 
-                    with col2:
-                        # Today's status
-                        today = date.today().isoformat()
-                        completion_dates = habit.get('completion_dates', [])
-                        if isinstance(completion_dates, str):
-                            try:
-                                completion_dates = json.loads(completion_dates)
-                            except:
-                                completion_dates = []
+    st.markdown(grid_html, unsafe_allow_html=True)
 
-                        completed_today = today in completion_dates
 
-                        if completed_today:
-                            st.success("✅ Completed today")
-                            if st.button("Undo", key=f"undo_habit_{habit['id']}"):
-                                uncomplete_habit(habit['id'])
-                                auto_save_data()
-                                st.rerun()
-                        else:
-                            if st.button("Mark Complete", key=f"habit_{habit['id']}", type="primary"):
-                                complete_habit(habit['id'])
-                                st.success("Habit completed!")
-                                auto_save_data()
-                                st.rerun()
-
-                    with col3:
-                        # Streak information
-                        current_streak = habit.get('streak', 0)
-                        best_streak = habit.get('best_streak', 0)
-
-                        st.metric("Current Streak", f"{current_streak} days")
-                        st.metric("Best Streak", f"{best_streak} days")
-
-                    with col4:
-                        if st.button("🗑️", key=f"delete_habit_{habit['id']}", help="Delete habit"):
-                            delete_habit(habit['id'])
-                            st.success("Habit deleted!")
-                            auto_save_data()
-                            st.rerun()
-
-                    # Habit tracker visualization (last 30 days)
-                    st.markdown("**Last 30 days:**")
-                    habit_html = '<div class="habit-tracker">'
-
-                    for i in range(29, -1, -1):  # Last 30 days
-                        check_date = (date.today() - timedelta(days=i))
-                        date_str = check_date.isoformat()
-
-                        if date_str in completion_dates:
-                            css_class = "habit-completed"
-                            title = f"Completed on {check_date.strftime('%m/%d')}"
-                        else:
-                            css_class = "habit-missed" if check_date < date.today() else "habit-pending"
-                            title = f"Missed on {check_date.strftime('%m/%d')}" if check_date < date.today() else f"Pending for {check_date.strftime('%m/%d')}"
-
-                        habit_html += f'<div class="habit-day {css_class}" title="{title}"></div>'
-
-                    habit_html += '</div>'
-                    st.markdown(habit_html, unsafe_allow_html=True)
-
-                    st.divider()
-
-    with tab2:
-        render_habit_insights()
-
-elif st.session_state.current_view == "pomodoro":
-    st.markdown('<h1 class="main-header">🍅 Pomodoro Timer</h1>', unsafe_allow_html=True)
+def render_enhanced_pomodoro_timer():
+    """Enhanced Pomodoro timer with modern design"""
 
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        st.markdown("### Timer Settings")
+        st.markdown("### ⚙️ Timer Configuration")
+
+        # Enhanced settings
         work_duration = st.slider("Work duration (minutes)", 15, 60,
                                   st.session_state.pomodoro_state.get('duration', 25))
-        break_duration = st.slider("Break duration (minutes)", 5, 30, 5)
-        long_break = st.slider("Long break duration (minutes)", 15, 60, 30)
+        break_duration = st.slider("Short break (minutes)", 5, 30,
+                                   st.session_state.pomodoro_state.get('break_duration', 5))
+        long_break = st.slider("Long break (minutes)", 15, 60,
+                               st.session_state.pomodoro_state.get('long_break_duration', 30))
+        daily_goal = st.slider("Daily goal (sessions)", 1, 16,
+                               st.session_state.pomodoro_state.get('daily_goal', 8))
 
-        # Sessions counter
+        # Session statistics
         sessions_completed = st.session_state.pomodoro_state.get('sessions_completed', 0)
-        st.metric("Sessions Completed Today", sessions_completed)
 
-        # Timer display and controls
+        # Enhanced metrics display
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("Today's Sessions", sessions_completed)
+        col_b.metric("Daily Goal", daily_goal)
+        col_c.metric("Progress", f"{min(100, sessions_completed / daily_goal * 100):.0f}%")
+
+        # Progress bar for daily goal
+        progress_pct = min(100, (sessions_completed / daily_goal) * 100)
+        st.markdown(f"""
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {progress_pct}%"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("### 🍅 Focus Timer")
+
+        # Enhanced timer display
         if st.session_state.pomodoro_state.get('active', False):
             elapsed = time.time() - st.session_state.pomodoro_state['start_time']
             duration_seconds = st.session_state.pomodoro_state['duration'] * 60
@@ -689,39 +1093,42 @@ elif st.session_state.current_view == "pomodoro":
 
             minutes = int(remaining // 60)
             seconds = int(remaining % 60)
-
-            # Progress calculation
             progress = 1 - (remaining / duration_seconds)
 
-            # Timer display
-            timer_color = "#e74c3c" if st.session_state.pomodoro_state['current_type'] == 'work' else "#27ae60"
+            # Enhanced timer display with animations
+            timer_class = "active" if remaining > 0 else ""
+            current_type = st.session_state.pomodoro_state['current_type']
 
             st.markdown(f"""
-            <div class="pomodoro-timer" style="border-color: {timer_color}; color: {timer_color};">
+            <div class="pomodoro-timer {timer_class}">
                 {minutes:02d}:{seconds:02d}
             </div>
             """, unsafe_allow_html=True)
 
-            # Progress bar
-            st.progress(progress)
-
-            current_type = st.session_state.pomodoro_state['current_type']
-            st.markdown(f"**Current: {current_type.title()} Session**")
+            # Enhanced progress visualization
+            fig = go.Figure(go.Indicator(
+                mode="gauge+number+delta",
+                value=progress * 100,
+                domain={'x': [0, 1], 'y': [0, 1]},
+                title={'text': f"{current_type.title()} Session"},
+                gauge={
+                    'axis': {'range': [None, 100]},
+                    'bar': {'color': "#667eea"},
+                    'steps': [{'range': [0, 100], 'color': "lightgray"}],
+                    'threshold': {
+                        'line': {'color': "red", 'width': 4},
+                        'thickness': 0.75,
+                        'value': 90
+                    }
+                }
+            ))
+            fig.update_layout(height=200)
+            st.plotly_chart(fig, use_container_width=True)
 
             if remaining <= 0:
-                if current_type == 'work':
-                    st.session_state.pomodoro_state['sessions_completed'] = sessions_completed + 1
-                    create_pomodoro_notification("break")
-                    st.balloons()
-                    st.success("🎉 Work session completed! Time for a break.")
-                else:
-                    create_pomodoro_notification("work")
-                    st.success("☕ Break time over! Ready for the next work session?")
+                handle_pomodoro_completion(current_type, sessions_completed)
 
-                st.session_state.pomodoro_state['active'] = False
-                auto_save_data()
-                st.rerun()
-
+            # Enhanced controls
             col_a, col_b = st.columns(2)
             with col_a:
                 if st.button("⏸️ Pause", type="secondary", use_container_width=True):
@@ -732,286 +1139,99 @@ elif st.session_state.current_view == "pomodoro":
                     st.session_state.pomodoro_state['active'] = False
                     st.session_state.pomodoro_state['start_time'] = None
                     st.rerun()
+
         else:
-            st.markdown(f"""
-            <div class="pomodoro-timer" style="border-color: #95a5a6; color: #95a5a6;">
+            # Timer ready state with enhanced UI
+            st.markdown("""
+            <div class="pomodoro-timer">
                 Ready
             </div>
             """, unsafe_allow_html=True)
 
+            # Enhanced start buttons
             col_a, col_b, col_c = st.columns(3)
+
             with col_a:
                 if st.button("▶️ Start Work", type="primary", use_container_width=True):
-                    st.session_state.pomodoro_state = {
-                        'active': True,
-                        'start_time': time.time(),
-                        'duration': work_duration,
-                        'current_type': 'work',
-                        'sessions_completed': sessions_completed
-                    }
-                    st.rerun()
+                    start_pomodoro_session('work', work_duration, sessions_completed)
 
             with col_b:
                 if st.button("☕ Short Break", type="secondary", use_container_width=True):
-                    st.session_state.pomodoro_state = {
-                        'active': True,
-                        'start_time': time.time(),
-                        'duration': break_duration,
-                        'current_type': 'break',
-                        'sessions_completed': sessions_completed
-                    }
-                    st.rerun()
+                    start_pomodoro_session('short_break', break_duration, sessions_completed)
 
             with col_c:
                 if st.button("🛌 Long Break", type="secondary", use_container_width=True):
-                    st.session_state.pomodoro_state = {
-                        'active': True,
-                        'start_time': time.time(),
-                        'duration': long_break,
-                        'current_type': 'long_break',
-                        'sessions_completed': sessions_completed
-                    }
-                    st.rerun()
+                    start_pomodoro_session('long_break', long_break, sessions_completed)
 
-    with col2:
-        st.markdown("### Current Task Focus")
+        # Current task focus section
+        render_current_task_focus()
 
-        pending_tasks = [t for t in st.session_state.tasks
-                         if t['status'] == TaskStatus.PENDING.value]
 
-        if pending_tasks:
-            current_task = st.selectbox("Select task to focus on",
-                                        ["No task selected"] + [t['title'] for t in pending_tasks])
+def render_enhanced_settings():
+    """Enhanced settings interface"""
 
-            if current_task != "No task selected":
-                task = next((t for t in pending_tasks if t['title'] == current_task), None)
-                if task:
-                    st.markdown(f"**{task['title']}**")
-                    if task.get('description'):
-                        st.markdown(task['description'])
-                    st.markdown(f"📅 Due: {format_date_display(task['due_date'])}")
-                    st.markdown(f"🎯 Priority: {task['priority'].title()}")
-
-                    # Task actions during focus
-                    if st.button("✅ Complete Task", use_container_width=True):
-                        complete_task(task['id'])
-                        st.success("Task completed during focus session!")
-                        auto_save_data()
-                        st.rerun()
-        else:
-            st.info("No pending tasks. Create some tasks to focus on!")
-
-        # Pomodoro statistics
-        st.markdown("### Today's Focus Stats")
-        st.metric("Work Sessions", sessions_completed)
-
-        if sessions_completed > 0:
-            total_focus_time = sessions_completed * work_duration
-            st.metric("Total Focus Time", f"{total_focus_time} minutes")
-
-            # Recommended break time
-            if sessions_completed % 4 == 0:
-                st.info("🎯 Consider taking a long break!")
-            else:
-                st.info("☕ Take a short break after this session")
-
-elif st.session_state.current_view == "statistics":
-    st.markdown('<h1 class="main-header">📊 Statistics & Analytics</h1>', unsafe_allow_html=True)
-
-    # Statistics tabs
-    tab1, tab2 = st.tabs(["📊 Overview", "🧠 Advanced Analytics"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🎨 Appearance", "📋 Lists & Data", "🔔 Notifications", "📊 Analytics"])
 
     with tab1:
-        # Overview metrics
-        stats = get_task_stats()
-        habit_stats = get_habit_stats()
-        insights = get_productivity_insights()
-
-        # Key metrics row
-        col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("Total Tasks", stats['total'])
-        col2.metric("Completion Rate", f"{stats['completion_rate']:.1f}%")
-        col3.metric("Tasks Due Today", stats['due_today'])
-        col4.metric("Habits Tracked", habit_stats['total'])
-        col5.metric("Focus Sessions", st.session_state.pomodoro_state.get('sessions_completed', 0))
-
-        # Charts
-        if stats['total'] > 0:
-            # Priority distribution
-            priority_data = stats['priority_stats']
-            if any(priority_data.values()):
-                fig = px.pie(
-                    values=list(priority_data.values()),
-                    names=list(priority_data.keys()),
-                    title="Tasks by Priority"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-            # List distribution
-            list_data = stats['list_stats']
-            if list_data:
-                list_names = list(list_data.keys())
-                list_totals = [list_data[name]['total'] for name in list_names]
-
-                fig = px.bar(
-                    x=list_names,
-                    y=list_totals,
-                    title="Tasks by List"
-                )
-                st.plotly_chart(fig, use_container_width=True)
+        render_appearance_settings()
 
     with tab2:
-        render_advanced_statistics()
-
-elif st.session_state.current_view == "advanced":
-    st.markdown('<h1 class="main-header">🧠 Advanced Features</h1>', unsafe_allow_html=True)
-
-    # Advanced features tabs
-    tab1, tab2 = st.tabs(["📋 Eisenhower Matrix", "📊 Data Management"])
-
-    with tab1:
-        render_eisenhower_matrix()
-
-    with tab2:
-        st.markdown("### 💾 Data Management")
-
-        # Data export/import
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("#### 📤 Export Data")
-
-            if st.button("Export as JSON", use_container_width=True):
-                export_data_str = export_data("json")
-                st.download_button(
-                    label="📥 Download Export File",
-                    data=export_data_str,
-                    file_name=f"ticktick_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                    mime="application/json",
-                    use_container_width=True
-                )
-
-        with col2:
-            st.markdown("#### 📥 Import Data")
-
-            uploaded_file = st.file_uploader("Choose backup file", type=['json'])
-            if uploaded_file:
-                try:
-                    import_data_str = uploaded_file.read().decode('utf-8')
-                    if st.button("📥 Import Data", use_container_width=True):
-                        if import_data(import_data_str, "json"):
-                            st.success("Data imported successfully!")
-                            auto_save_data()
-                            st.rerun()
-                        else:
-                            st.error("Failed to import data. Please check file format.")
-                except Exception as e:
-                    st.error(f"Error reading file: {str(e)}")
-
-elif st.session_state.current_view == "notifications":
-    st.markdown('<h1 class="main-header">🔔 Notifications</h1>', unsafe_allow_html=True)
-    render_notification_center()
-
-elif st.session_state.current_view == "settings":
-    st.markdown('<h1 class="main-header">⚙️ Settings</h1>', unsafe_allow_html=True)
-
-    # Settings tabs
-    tab1, tab2, tab3 = st.tabs(["🎨 Appearance", "📋 Lists", "🔄 Data"])
-
-    with tab1:
-        # App preferences
-        st.markdown("### 🎨 Appearance")
-        col1, col2 = st.columns(2)
-        with col1:
-            theme = st.selectbox("Theme", ["Default", "Dark", "Blue"],
-                                 index=0, key="theme_select")
-        with col2:
-            language = st.selectbox("Language", ["English", "Spanish", "French"],
-                                    index=0, key="language_select")
-
-        st.markdown("### 🔔 Notifications")
-        enable_notifications = st.checkbox("Enable notifications", value=True)
-        enable_achievements = st.checkbox("Achievement notifications", value=True)
-        enable_reminders = st.checkbox("Habit reminders", value=True)
-
-    with tab2:
-        # List management
-        st.markdown("### 📁 List Management")
-
-        # Display current lists
-        st.write("**Current Lists:**")
-        for i, list_name in enumerate(st.session_state.lists):
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.write(f"📋 {list_name}")
-            with col2:
-                if st.button("Delete", key=f"delete_list_{i}"):
-                    # Don't delete if it has tasks
-                    list_tasks = [t for t in st.session_state.tasks if t['list_name'] == list_name]
-                    if list_tasks:
-                        st.error(f"Cannot delete '{list_name}' - it contains {len(list_tasks)} tasks")
-                    else:
-                        st.session_state.lists.remove(list_name)
-                        st.success(f"Deleted list: {list_name}")
-                        auto_save_data()
-                        st.rerun()
+        render_data_management_settings()
 
     with tab3:
-        # Data management
-        st.markdown("### 💾 Data Management")
+        render_notification_settings()
 
-        # Auto-save settings
-        st.markdown("#### ⚙️ Auto-Save")
-        auto_save_enabled = st.checkbox("Enable auto-save", value=True)
-        if auto_save_enabled:
-            auto_save_interval = st.slider("Auto-save interval (seconds)", 10, 300, 30)
+    with tab4:
+        render_analytics_settings()
 
-        # Reset data
-        st.markdown("#### 🔄 Reset Data")
-        st.warning("⚠️ This will delete all your tasks, habits, and custom lists!")
 
-        if st.button("🗑️ Reset All Data", type="secondary"):
-            if st.checkbox("I understand this will delete all my data", key="confirm_reset"):
-                st.session_state.tasks = []
-                st.session_state.habits = []
-                st.session_state.lists = ["Inbox", "Personal", "Work", "Shopping"]
-                st.session_state.pomodoro_state = {
-                    'active': False,
-                    'start_time': None,
-                    'duration': 25,
-                    'current_type': 'work',
-                    'sessions_completed': 0
-                }
-                if 'notifications_data' in st.session_state:
-                    st.session_state.notifications_data = []
-                st.success("All data has been reset!")
-                auto_save_data()
-                st.rerun()
+# Additional helper functions
+def start_pomodoro_for_task(task: Dict):
+    """Start a Pomodoro session for a specific task"""
+    duration = min(25, task.get('estimated_time', 25) or 25)
 
-        # App information
-        st.markdown("### ℹ️ About")
-        st.info("""
-        **TickTick Clone Enhanced v2.0**
+    st.session_state.pomodoro_state = {
+        'active': True,
+        'start_time': time.time(),
+        'duration': duration,
+        'current_type': 'work',
+        'current_task': task['title'],
+        'current_task_id': task['id'],
+        'sessions_completed': st.session_state.pomodoro_state.get('sessions_completed', 0)
+    }
+    st.session_state.current_view = "pomodoro"
+    st.rerun()
 
-        A comprehensive task management application with advanced features.
 
-        ✨ **Features:**
-        - ✅ Task management with priorities and due dates
-        - 📅 Calendar views and scheduling
-        - 🎯 Habit tracking with streaks
-        - 🍅 Pomodoro timer for focus sessions
-        - 📊 Statistics and productivity insights
-        - 🔔 Smart notifications system
-        - 🧠 Eisenhower Matrix view
-        - 📈 Advanced analytics
-        - ⚡ Bulk operations
-        - 📋 Task templates
-        - 💾 Data persistence and backup
+def handle_pomodoro_completion(session_type: str, sessions_completed: int):
+    """Handle Pomodoro session completion"""
+    if session_type == 'work':
+        st.session_state.pomodoro_state['sessions_completed'] = sessions_completed + 1
+        create_pomodoro_notification("break", {"session_type": session_type})
+        st.balloons()
+        st.success("🎉 Work session completed! Time for a break.")
+    else:
+        create_pomodoro_notification("work", {"session_type": session_type})
+        st.success("☕ Break time over! Ready for the next work session?")
 
-        Created for personal productivity and task organization.
-        """)
+    st.session_state.pomodoro_state['active'] = False
+    auto_save_data()
+    st.rerun()
 
-# Auto-refresh for timer (only when timer is active)
+
+def start_pomodoro_session(session_type: str, duration: int, sessions_completed: int):
+    """Start a new Pomodoro session"""
+    st.session_state.pomodoro_state = {
+        'active': True,
+        'start_time': time.time(),
+        'duration': duration,
+        'current_type': session_type,
+        'sessions_completed': sessions_completed
+    }
+    st.rerun()
+
+
+# Auto-refresh for active timer
 if (st.session_state.current_view == "pomodoro" and
         st.session_state.pomodoro_state.get('active', False)):
     time.sleep(1)
