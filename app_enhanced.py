@@ -4,6 +4,9 @@ from datetime import datetime, timedelta, date
 import time
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import json
+import uuid
 from utils import *
 from advanced_features import *
 from data_persistence import *
@@ -130,40 +133,14 @@ st.markdown("""
     .habit-missed { background: #e74c3c; border-color: #e74c3c; }
     .habit-pending { background: #ecf0f1; }
 
-    .weekly-planner {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 10px;
-        margin: 20px 0;
-    }
-
-    .day-column {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        min-height: 200px;
-        background: white;
-    }
-
-    .eisenhower-matrix {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
-        gap: 15px;
-        margin: 20px 0;
-    }
-
-    .matrix-quadrant {
-        border: 2px solid #ddd;
-        border-radius: 8px;
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
         padding: 15px;
-        min-height: 200px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 5px 0;
     }
-
-    .matrix-urgent-important { border-color: #e74c3c; background: #fdf2f2; }
-    .matrix-not-urgent-important { border-color: #f39c12; background: #fef9e7; }
-    .matrix-urgent-not-important { border-color: #3498db; background: #ebf3fd; }
-    .matrix-not-urgent-not-important { border-color: #27ae60; background: #eafaf1; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -176,7 +153,7 @@ if 'data_loaded' not in st.session_state:
     load_saved_data()
     st.session_state.data_loaded = True
 
-# Auto-save every 30 seconds (in a real app, this would be handled differently)
+# Auto-save data
 if 'last_auto_save' not in st.session_state:
     st.session_state.last_auto_save = datetime.now()
 
@@ -374,7 +351,7 @@ if st.session_state.current_view == "tasks":
                                    ["Due Date", "Priority", "Created", "Title"],
                                    key="sort_by")
 
-        # Get and filter tasks (same logic as before)
+        # Get and filter tasks
         if search_query:
             tasks = search_tasks(search_query)
         else:
@@ -433,24 +410,26 @@ if st.session_state.current_view == "tasks":
                                 st.rerun()
 
                     with col2:
-                        # Build task tags HTML
+                        # Build task display
                         tags_html = ""
-                        if task['tags']:
-                            tags_html = "<br>" + "".join(
-                                [f'<span class="task-tag">{tag}</span>' for tag in task['tags']])
+                        if task.get('tags') and isinstance(task['tags'], list):
+                            tags_html = "<br>" + " ".join(
+                                [
+                                    f'<span style="background:#667eea;color:white;padding:2px 6px;border-radius:8px;font-size:10px;">{tag}</span>'
+                                    for tag in task['tags']])
 
                         # Format due date
                         due_date_display = format_date_display(task['due_date'])
 
                         # Subtasks count
                         subtask_info = ""
-                        if task['subtasks']:
+                        if task.get('subtasks') and isinstance(task['subtasks'], list):
                             subtask_info = f" | 📝 {len(task['subtasks'])} subtasks"
 
                         st.markdown(f"""
                         <div class="task-item {priority_class} {status_class}">
                             <strong class="{title_class}">{task['title']}</strong><br>
-                            <small style="color: #6c757d;">{task['description']}</small><br>
+                            <small style="color: #6c757d;">{task.get('description', '')}</small><br>
                             <small style="color: #6c757d;">📋 {task['list_name']} | 📅 {due_date_display} | 
                             🎯 {task['priority'].title()}{subtask_info}</small>
                             {tags_html}
@@ -459,7 +438,17 @@ if st.session_state.current_view == "tasks":
 
                     with col3:
                         if st.button("✏️", key=f"edit_{task['id']}", help="Edit task"):
-                            st.session_state[f"edit_mode_{task['id']}"] = True
+                            # Simple edit functionality
+                            with st.form(key=f"edit_form_{task['id']}"):
+                                new_title = st.text_input("Title", value=task['title'])
+                                new_desc = st.text_area("Description", value=task.get('description', ''))
+                                if st.form_submit_button("Update"):
+                                    if new_title:
+                                        task['title'] = new_title
+                                        task['description'] = new_desc
+                                        st.success("Task updated!")
+                                        auto_save_data()
+                                        st.rerun()
 
                     with col4:
                         if st.button("🗑️", key=f"delete_{task['id']}", help="Delete task"):
@@ -481,10 +470,10 @@ elif st.session_state.current_view == "calendar":
     st.markdown('<h1 class="main-header">📅 Calendar</h1>', unsafe_allow_html=True)
 
     # Calendar view tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📅 Month View", "📋 Week Planner", "📊 Timeline", "📈 Calendar Stats"])
+    tab1, tab2, tab3 = st.tabs(["📅 Month View", "📋 Week Planner", "📊 Timeline"])
 
     with tab1:
-        # Monthly calendar view (existing code)
+        # Monthly calendar view
         col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
             view_type = st.selectbox("View", ["Month", "Week", "Day"])
@@ -494,7 +483,9 @@ elif st.session_state.current_view == "calendar":
             st.metric("Tasks Today", len(get_tasks_by_filter("today")))
 
         if view_type == "Month":
-            # Monthly calendar implementation (same as before)
+            # Monthly calendar implementation
+            import calendar
+
             month_start = current_date.replace(day=1)
 
             # Get tasks for the month
@@ -512,8 +503,6 @@ elif st.session_state.current_view == "calendar":
                         continue
 
             # Create calendar grid
-            import calendar
-
             cal = calendar.monthcalendar(current_date.year, current_date.month)
 
             st.markdown(f"### {calendar.month_name[current_date.month]} {current_date.year}")
@@ -561,29 +550,6 @@ elif st.session_state.current_view == "calendar":
     with tab3:
         render_gantt_chart()
 
-    with tab4:
-        # Calendar statistics
-        st.markdown("### 📈 Calendar Analytics")
-
-        # Tasks by day of week
-        day_stats = {}
-        for task in st.session_state.tasks:
-            if task['due_date']:
-                try:
-                    task_date = datetime.fromisoformat(task['due_date'])
-                    day_name = task_date.strftime('%A')
-                    day_stats[day_name] = day_stats.get(day_name, 0) + 1
-                except:
-                    continue
-
-        if day_stats:
-            fig = px.bar(
-                x=list(day_stats.keys()),
-                y=list(day_stats.values()),
-                title="Tasks Distribution by Day of Week"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
 elif st.session_state.current_view == "habits":
     st.markdown('<h1 class="main-header">🎯 Habits</h1>', unsafe_allow_html=True)
 
@@ -600,7 +566,7 @@ elif st.session_state.current_view == "habits":
         col4.metric("Avg Streak", f"{habit_stats['average_streak']:.1f}")
 
         # Add new habit
-        with st.expander("➕ Add New Habit", expanded=True):
+        with st.expander("➕ Add New Habit", expanded=False):
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 habit_name = st.text_input("Habit name", placeholder="e.g., Drink 8 glasses of water")
@@ -619,7 +585,7 @@ elif st.session_state.current_view == "habits":
                     auto_save_data()
                     st.rerun()
 
-        # Display habits (existing implementation)
+        # Display habits
         if not st.session_state.habits:
             st.info("No habits yet. Create your first habit above!")
         else:
@@ -637,7 +603,14 @@ elif st.session_state.current_view == "habits":
                     with col2:
                         # Today's status
                         today = date.today().isoformat()
-                        completed_today = today in habit['completion_dates']
+                        completion_dates = habit.get('completion_dates', [])
+                        if isinstance(completion_dates, str):
+                            try:
+                                completion_dates = json.loads(completion_dates)
+                            except:
+                                completion_dates = []
+
+                        completed_today = today in completion_dates
 
                         if completed_today:
                             st.success("✅ Completed today")
@@ -675,7 +648,7 @@ elif st.session_state.current_view == "habits":
                         check_date = (date.today() - timedelta(days=i))
                         date_str = check_date.isoformat()
 
-                        if date_str in habit['completion_dates']:
+                        if date_str in completion_dates:
                             css_class = "habit-completed"
                             title = f"Completed on {check_date.strftime('%m/%d')}"
                         else:
@@ -700,7 +673,7 @@ elif st.session_state.current_view == "pomodoro":
     with col1:
         st.markdown("### Timer Settings")
         work_duration = st.slider("Work duration (minutes)", 15, 60,
-                                  st.session_state.pomodoro_state.get('work_duration', 25))
+                                  st.session_state.pomodoro_state.get('duration', 25))
         break_duration = st.slider("Break duration (minutes)", 5, 30, 5)
         long_break = st.slider("Long break duration (minutes)", 15, 60, 30)
 
@@ -709,7 +682,7 @@ elif st.session_state.current_view == "pomodoro":
         st.metric("Sessions Completed Today", sessions_completed)
 
         # Timer display and controls
-        if st.session_state.pomodoro_state['active']:
+        if st.session_state.pomodoro_state.get('active', False):
             elapsed = time.time() - st.session_state.pomodoro_state['start_time']
             duration_seconds = st.session_state.pomodoro_state['duration'] * 60
             remaining = max(0, duration_seconds - elapsed)
@@ -737,7 +710,7 @@ elif st.session_state.current_view == "pomodoro":
 
             if remaining <= 0:
                 if current_type == 'work':
-                    st.session_state.pomodoro_state['sessions_completed'] += 1
+                    st.session_state.pomodoro_state['sessions_completed'] = sessions_completed + 1
                     create_pomodoro_notification("break")
                     st.balloons()
                     st.success("🎉 Work session completed! Time for a break.")
@@ -814,7 +787,7 @@ elif st.session_state.current_view == "pomodoro":
                 task = next((t for t in pending_tasks if t['title'] == current_task), None)
                 if task:
                     st.markdown(f"**{task['title']}**")
-                    if task['description']:
+                    if task.get('description'):
                         st.markdown(task['description'])
                     st.markdown(f"📅 Due: {format_date_display(task['due_date'])}")
                     st.markdown(f"🎯 Priority: {task['priority'].title()}")
@@ -849,7 +822,7 @@ elif st.session_state.current_view == "statistics":
     tab1, tab2 = st.tabs(["📊 Overview", "🧠 Advanced Analytics"])
 
     with tab1:
-        # Overview metrics (existing implementation)
+        # Overview metrics
         stats = get_task_stats()
         habit_stats = get_habit_stats()
         insights = get_productivity_insights()
@@ -862,8 +835,30 @@ elif st.session_state.current_view == "statistics":
         col4.metric("Habits Tracked", habit_stats['total'])
         col5.metric("Focus Sessions", st.session_state.pomodoro_state.get('sessions_completed', 0))
 
-        # Charts and other existing statistics code...
-        # (Include the existing statistics implementation here)
+        # Charts
+        if stats['total'] > 0:
+            # Priority distribution
+            priority_data = stats['priority_stats']
+            if any(priority_data.values()):
+                fig = px.pie(
+                    values=list(priority_data.values()),
+                    names=list(priority_data.keys()),
+                    title="Tasks by Priority"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            # List distribution
+            list_data = stats['list_stats']
+            if list_data:
+                list_names = list(list_data.keys())
+                list_totals = [list_data[name]['total'] for name in list_names]
+
+                fig = px.bar(
+                    x=list_names,
+                    y=list_totals,
+                    title="Tasks by List"
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
         render_advanced_statistics()
@@ -887,9 +882,6 @@ elif st.session_state.current_view == "advanced":
             st.markdown("#### 📤 Export Data")
 
             if st.button("Export as JSON", use_container_width=True):
-                if 'data_manager' not in st.session_state:
-                    st.session_state.data_manager = DataManager("file")
-
                 export_data_str = export_data("json")
                 st.download_button(
                     label="📥 Download Export File",
@@ -898,21 +890,6 @@ elif st.session_state.current_view == "advanced":
                     mime="application/json",
                     use_container_width=True
                 )
-
-            if st.button("Export as CSV", use_container_width=True):
-                if 'data_manager' not in st.session_state:
-                    st.session_state.data_manager = DataManager("file")
-
-                csv_files = st.session_state.data_manager.export_to_csv()
-                if csv_files:
-                    for file_type, csv_data in csv_files.items():
-                        st.download_button(
-                            label=f"📥 Download {file_type.title()} CSV",
-                            data=csv_data,
-                            file_name=f"ticktick_{file_type}_{datetime.now().strftime('%Y%m%d')}.csv",
-                            mime="text/csv",
-                            use_container_width=True
-                        )
 
         with col2:
             st.markdown("#### 📥 Import Data")
@@ -930,24 +907,6 @@ elif st.session_state.current_view == "advanced":
                             st.error("Failed to import data. Please check file format.")
                 except Exception as e:
                     st.error(f"Error reading file: {str(e)}")
-
-        # Storage statistics
-        if 'data_manager' not in st.session_state:
-            st.session_state.data_manager = DataManager("file")
-
-        storage_stats = st.session_state.data_manager.get_storage_stats()
-
-        st.markdown("#### 📊 Storage Statistics")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Storage Type", storage_stats['storage_type'].title())
-        col2.metric("Files", len(storage_stats['files']))
-
-        if 'database' in storage_stats:
-            total_size = storage_stats['database']['size_bytes']
-        else:
-            total_size = sum(f.get('size_bytes', 0) for f in storage_stats['files'].values() if isinstance(f, dict))
-
-        col3.metric("Total Size", f"{total_size / 1024:.1f} KB")
 
 elif st.session_state.current_view == "notifications":
     st.markdown('<h1 class="main-header">🔔 Notifications</h1>', unsafe_allow_html=True)
@@ -1007,15 +966,6 @@ elif st.session_state.current_view == "settings":
         if auto_save_enabled:
             auto_save_interval = st.slider("Auto-save interval (seconds)", 10, 300, 30)
 
-        # Backup management
-        st.markdown("#### 🔄 Backup Management")
-        if st.button("🗄️ Create Manual Backup"):
-            if 'data_manager' not in st.session_state:
-                st.session_state.data_manager = DataManager("file")
-
-            backup_path = st.session_state.data_manager.backup_data()
-            st.success(f"Backup created: {backup_path}")
-
         # Reset data
         st.markdown("#### 🔄 Reset Data")
         st.warning("⚠️ This will delete all your tasks, habits, and custom lists!")
@@ -1032,7 +982,8 @@ elif st.session_state.current_view == "settings":
                     'current_type': 'work',
                     'sessions_completed': 0
                 }
-                st.session_state.notifications_data = []
+                if 'notifications_data' in st.session_state:
+                    st.session_state.notifications_data = []
                 st.success("All data has been reset!")
                 auto_save_data()
                 st.rerun()
@@ -1044,29 +995,23 @@ elif st.session_state.current_view == "settings":
 
         A comprehensive task management application with advanced features.
 
-        ✨ **New Features:**
-        - 🔔 Smart notifications system
-        - 🧠 Eisenhower Matrix view
-        - 📊 Advanced analytics and insights
-        - 🎯 Focus mode for distraction-free work
-        - ⚡ Bulk operations for multiple tasks
-        - 📋 Task templates for common workflows
-        - 📅 Enhanced calendar with timeline view
-        - 💾 Data persistence and backup system
-        - 📈 Habit analytics with streak tracking
-
-        **Core Features:**
+        ✨ **Features:**
         - ✅ Task management with priorities and due dates
         - 📅 Calendar views and scheduling
         - 🎯 Habit tracking with streaks
         - 🍅 Pomodoro timer for focus sessions
         - 📊 Statistics and productivity insights
-        - 🎨 Clean, intuitive interface
+        - 🔔 Smart notifications system
+        - 🧠 Eisenhower Matrix view
+        - 📈 Advanced analytics
+        - ⚡ Bulk operations
+        - 📋 Task templates
+        - 💾 Data persistence and backup
 
         Created for personal productivity and task organization.
         """)
 
-# Auto-refresh for timer
+# Auto-refresh for timer (only when timer is active)
 if (st.session_state.current_view == "pomodoro" and
         st.session_state.pomodoro_state.get('active', False)):
     time.sleep(1)
