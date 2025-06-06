@@ -1,0 +1,11 @@
+{
+  "default_list": "Inbox",
+  "default_priority": "none",
+  "pomodoro_work_duration": 25,
+  "pomodoro_break_duration": 5,
+  "pomodoro_long_break": 30,
+  "habit_reminder_enabled": true,
+  "achievement_notifications": true,
+  "weekly_summary": true,
+  "theme_preference": "default"
+}
