@@ -1,5 +1,3 @@
-import time
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
@@ -7,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import json
+import time
 from typing import Dict, List, Optional
 from utils import *
 
@@ -706,3 +705,15 @@ def render_task_templates():
                 })
                 st.success("Template created!")
                 st.rerun()
+
+
+# Helper functions that might be missing from utils.py
+def update_task(task_id: str, **kwargs) -> bool:
+    """Update a task with given parameters"""
+    for task in st.session_state.tasks:
+        if task['id'] == task_id:
+            for key, value in kwargs.items():
+                if key in task:
+                    task[key] = value
+            return True
+    return False
